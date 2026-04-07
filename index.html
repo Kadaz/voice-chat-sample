@@ -5,26 +5,34 @@
 <title>skyway sample</title>
 
 <form id="join-form">
-  <input id="my-id" required placeholder="名前 (半角英数)" pattern="^[a-zA-Z0-9 _-]+$">
-  <button id="join">ログイン</button>
-  <button id="leave" type="button" hidden>ログアウト</button>
+  <input id="my-id" required placeholder="Name (half-width alphanumeric characters)" pattern="^[a-zA-Z0-9 _-]+$">
+  <button id="join">Login</button>
+  <button id="leave" type="button" hidden>Logout</button>
 </form>
 
 <div id="users"></div>
+<div id="chat">
+  <div id="messages"></div>
+
+  <form id="chat-form">
+    <input id="chat-input" placeholder="chat here..." autocomplete="off" />
+    <button>Send</button>
+  </form>
+</div>
 
 <div id="readme" hidden>
-  使い方
+  How to use
   <ul>
-    <li>普段の声は小さく聞こえます</li>
-    <li>人を選ぶとグループになります</li>
-    <li>グループ内は声が通常の大きさに戻ります</li>
-    <li>マウスホバーで聞き耳を立てます</li>
+    <li>His normal voice sounds quiet.</li>
+    <li>When you select people, they form a group.</li>
+    <li>The voices within the group return to normal volume.</li>
+    <li>Hover your mouse over it to listen.</li>
   </ul>
   TODO
   <ul>
-    <li>グループを作ったら相手に通知を飛ばす</li>
-    <li>全員に呼びかけるボタン</li>
-    <li>グループ内外それぞれのテキストチャット</li>
+    <li>When you create a group, a notification will be sent to the other members.</li>
+    <li>Button to call out to everyone</li>
+    <li>Text chats both inside and outside the group</li>
   </ul>
 </div>
 
@@ -41,6 +49,26 @@
   const $leave = document.querySelector('#leave')
   const $users = document.querySelector('#users')
   const $readme = document.querySelector('#readme')
+  const $chatForm = document.querySelector('#chat-form')
+  const $chatInput = document.querySelector('#chat-input')
+  const $messages = document.querySelector('#messages')
+  $chatForm.onsubmit = (e) => {
+  e.preventDefault()
+
+  const text = $chatInput.value.trim()
+  if (!text) return
+
+  const myId = getPeerId()
+
+  sendRoom('chat', {
+    user: myId,
+    text
+  })
+
+  addMessage(myId, text)
+
+  $chatInput.value = ''
+}
 
   const quietVolume = 0.1
   const userEls = {}
@@ -54,6 +82,15 @@
   function sendUsers() {
     sendRoom('users', users)
   }
+  
+  function addMessage(user, text) {
+  const el = document.createElement('div')
+  el.className = 'msg'
+  el.innerHTML = `<strong>${user}:</strong> ${text}`
+
+  $messages.appendChild(el)
+  $messages.scrollTop = $messages.scrollHeight
+}
 
   function setUsers(data) {
     users = data
@@ -238,6 +275,9 @@
       if (type === 'users') {
         setUsers(data)
       }
+	  if (type === 'chat') {
+        addMessage(data.user, data.text)
+      }
     })
   }
 </script>
@@ -326,4 +366,26 @@
   .user.hear {
     background-color: rgba(255, 166, 0, 0.1);
   }
+#chat {
+  margin: 20px;
+  max-width: 400px;
+}
+
+#messages {
+  border: 1px solid #ddd;
+  height: 200px;
+  overflow-y: auto;
+  padding: 8px;
+  margin-bottom: 8px;
+  font-size: 14px;
+  background: #fafafa;
+}
+
+.msg {
+  margin-bottom: 4px;
+}
+
+.msg strong {
+  margin-right: 6px;
+}
 </style>
